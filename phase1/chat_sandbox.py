@@ -323,7 +323,7 @@ class ChatSandbox:
         imp = importer or create_importer()
 
         messages = imp.parse_file(filepath)
-        ch_names = list(self.chs.keys())
+        ch_names = [self.chs[nid].name for nid in self.chs]
 
         # 分配消息给各个 CH
         name_to_ch = {self.chs[nid].name: nid for nid in self.chs}
