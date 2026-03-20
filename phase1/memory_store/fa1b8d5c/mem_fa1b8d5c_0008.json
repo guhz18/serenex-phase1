@@ -1,0 +1,18 @@
+{
+  "id": "mem_fa1b8d5c_0008",
+  "timestamp": 1773972352.5545335,
+  "content": "你好啊，阿华！",
+  "summary": "你好啊，阿华！",
+  "participants": [
+    "fa1b8d5c",
+    "f735765c"
+  ],
+  "emotion_tags": [
+    {
+      "label": "neutral",
+      "intensity": 0.5
+    }
+  ],
+  "importance": 0.45699999999999996,
+  "linked_image_ids": []
+}

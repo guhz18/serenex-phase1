@@ -1,0 +1,18 @@
+{
+  "id": "mem_fa1b8d5c_0004",
+  "timestamp": 1773972351.0858579,
+  "content": "嗨~终于有人来聊天了",
+  "summary": "嗨~终于有人来聊天了",
+  "participants": [
+    "fa1b8d5c",
+    "c6176f5f"
+  ],
+  "emotion_tags": [
+    {
+      "label": "neutral",
+      "intensity": 0.5
+    }
+  ],
+  "importance": 0.45999999999999996,
+  "linked_image_ids": []
+}

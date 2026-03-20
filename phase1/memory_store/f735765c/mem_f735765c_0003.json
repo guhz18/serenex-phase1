@@ -1,0 +1,18 @@
+{
+  "id": "mem_f735765c_0003",
+  "timestamp": 1773972351.7221222,
+  "content": "你好啊，小雨！",
+  "summary": "你好啊，小雨！",
+  "participants": [
+    "c6176f5f",
+    "f735765c"
+  ],
+  "emotion_tags": [
+    {
+      "label": "neutral",
+      "intensity": 0.5
+    }
+  ],
+  "importance": 0.45699999999999996,
+  "linked_image_ids": []
+}
