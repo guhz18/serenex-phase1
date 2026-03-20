@@ -12,6 +12,10 @@ from dataclasses import dataclass, field
 from cyber_human import CyberHuman, ChatBehavior, EmotionLabel
 from llm_interface import llm
 from emotion_tag import infer_emotions
+from personality import PersonalityModel, create_personality
+from sleep_consolidation import SleepConsolidation
+
+DASHBOARD_STATE_FILE = "/tmp/serenex_dashboard.json"
 
 
 @dataclass
@@ -51,9 +55,18 @@ class ChatSandbox:
         
         from memory_system import MemorySystem
         self.memory_systems: Dict[str, type] = {}
+        
+        # 睡眠整合
+        self.sleep_tracker: Dict[str, int] = {}  # ch_id -> rounds since last sleep
+        self.sleep_history: List[dict] = []
     
-    def add_ch(self, ch: CyberHuman):
+    def add_ch(self, ch: CyberHuman, personality: PersonalityModel = None):
+        """添加 CH，带人格模型（可选）"""
         self.chs[ch.id] = ch
+        self.sleep_tracker[ch.id] = 0
+        
+        # 人格：默认从预设生成
+        ch.personality = personality or create_personality()
         # 初始化关系：互相设为0.3起步
         for other_id in self.chs:
             if other_id != ch.id:
@@ -98,17 +111,20 @@ class ChatSandbox:
                         ch.state = ChatBehavior.IDLE
                 continue
 
-            # 无申请则主动发起（按关系概率掷骰）
+            # 无申请则主动发起（人格影响概率）
             if ch.state == ChatBehavior.IDLE:
+                personality = getattr(ch, "personality", None)
+                base_prob = (personality.chat_probability() 
+                             if personality else 0.30)
                 targets = sorted(ch.relations.items(), key=lambda x: x[1], reverse=True)
-                for target_id, prob in targets:
+                for target_id, rel_prob in targets:
                     if target_id in self.chs and self.chs[target_id].is_available():
-                        if random.random() < prob:
+                        combined_prob = base_prob * rel_prob * 2  # 关系 × 人格
+                        if random.random() < combined_prob:
                             ch.state = ChatBehavior.INITIATING
                             ch.chat_target = target_id
                             self.chs[target_id].receive_application(ch.id)
                             break
-                        # 概率不够，不发起
 
         # === 阶段2：INITIATING 的 CH 检测目标是否已把自己加进申请 ===
         for ch in self.chs.values():
@@ -123,6 +139,13 @@ class ChatSandbox:
 
         # === 阶段3：运行所有活跃会话 ===
         events += self._run_active_sessions()
+
+        # === 阶段4：睡眠整合检查 ===
+        events += self._run_sleep_consolidation()
+
+        # === 阶段5：写入仪表盘状态 ===
+        self.write_dashboard_state()
+
         return events
     
     def _start_session(self, initiator_id: str, receiver_id: str):
@@ -263,25 +286,25 @@ class ChatSandbox:
         ch_a.end_chat()
         ch_b.end_chat()
         
-        # 根据结果调整关系
-        if outcome == "positive":
-            delta = +0.08
-        elif outcome == "negative":
-            delta = -0.05
-        else:
-            delta = +0.02
+        # 根据结果调整关系（人格调整幅度）
+        base_delta_map = {"positive": 0.08, "negative": -0.05, "neutral": 0.02}
+        base_delta = base_delta_map.get(outcome, 0.02)
         
-        # 更新关系矩阵
+        # A 的感知delta（神经质+宜人性放大）
+        delta_a = getattr(ch_a, "personality", None) and ch_a.personality.relationship_delta(outcome) or base_delta
+        delta_b = getattr(ch_b, "personality", None) and ch_b.personality.relationship_delta(outcome) or base_delta
+        
+        # 更新关系矩阵（人格调整后的独立 delta）
         self.relation_matrix[(ch_a.id, ch_b.id)] = min(1.0,
-            self.relation_matrix.get((ch_a.id, ch_b.id), 0.3) + delta)
+            self.relation_matrix.get((ch_a.id, ch_b.id), 0.3) + delta_a)
         self.relation_matrix[(ch_b.id, ch_a.id)] = min(1.0,
-            self.relation_matrix.get((ch_b.id, ch_a.id), 0.3) + delta)
+            self.relation_matrix.get((ch_b.id, ch_a.id), 0.3) + delta_b)
         
         # 更新各自的关系字典
-        ch_a.adjust_relation(ch_b.id, delta)
-        ch_b.adjust_relation(ch_a.id, delta)
+        ch_a.adjust_relation(ch_b.id, delta_a)
+        ch_b.adjust_relation(ch_a.id, delta_b)
         
-        self.log.append(f"  ↕ 关系更新 {ch_a.name}-{ch_b.name}: {delta:+.3f}")
+        self.log.append(f"  ↕ 关系 {ch_a.name}-{ch_b.name}: A{delta_a:+.3f} B{delta_b:+.3f}")
     
     def status(self) -> str:
         active = sum(1 for ch in self.chs.values() if ch.state == ChatBehavior.IN_CHAT)
@@ -301,6 +324,89 @@ class ChatSandbox:
             lines.append(f"  {ch.status_line()}")
         
         return "\n".join(lines)
+
+    # ── 睡眠整合 ────────────────────────────────────────────
+    def _run_sleep_consolidation(self) -> List[str]:
+        """检查是否需要睡眠，并对需要的 CH 运行记忆整合"""
+        events = []
+        for ch in list(self.chs.values()):
+            self.sleep_tracker[ch.id] = self.sleep_tracker.get(ch.id, 0) + 1
+            
+            personality = getattr(ch, "personality", None)
+            consolidator = SleepConsolidation(personality or create_personality())
+            mem_sys = self.memory_systems.get(ch.id)
+            if not mem_sys:
+                from memory_system import MemorySystem
+                mem_sys = MemorySystem(ch.id, self.app_storage_dir)
+                self.memory_systems[ch.id] = mem_sys
+                mem_sys.load_memories()
+            
+            should, reason = consolidator.should_sleep(
+                self.sleep_tracker[ch.id],
+                sum(ch.brain.activation.values())
+            )
+            
+            if should:
+                self.sleep_tracker[ch.id] = 0
+                result = consolidator.run_sleep(
+                    ch.id, mem_sys, ch.emotion.dominant_tag().value
+                )
+                ch.perceive_event("sleep", intensity=0.3)
+                events.append(
+                    f"  🌙 {ch.name} 进入睡眠整合: {reason}"
+                )
+                events.append(f"    → 重播 {result.memories_replayed} 段记忆，"
+                              f"神经强化 +{result.neural_change:.3f}，"
+                              f"梦境: {result.new_memory_summary[:40]}……")
+                # 记录到 sleep history
+                self.sleep_history.append({
+                    "ch_name": ch.name,
+                    "round": self.round_count,
+                    "dream_summary": result.new_memory_summary,
+                    "memories_replayed": result.memories_replayed,
+                    "neural_change": result.neural_change,
+                    "emotional_after": result.emotional_after,
+                    "duration_ms": result.duration_seconds * 1000,
+                })
+        return events
+
+    # ── 仪表盘状态输出 ────────────────────────────────────
+    def write_dashboard_state(self, filepath: str = DASHBOARD_STATE_FILE):
+        """将当前沙盒状态写入 JSON，供仪表盘读取"""
+        import json, os
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        chs_data = []
+        for ch in self.chs.values():
+            chs_data.append({
+                "id": ch.id,
+                "name": ch.name,
+                "state": ch.state.value,
+                "emotion": ch.emotion.dominant_tag().value,
+                "emotion_val": ch.emotion.intensity(),
+                "brain_activation": sum(ch.brain.activation.values()),
+                "memories": ch.episodic_memory_count,
+                "personality": (ch.personality.mbti_type 
+                                if hasattr(ch, "personality") and ch.personality else "ENFP"),
+                "relations": [
+                    {"target": self.chs[tid].name, "prob": prob}
+                    for tid, prob in ch.relations.items()
+                    if tid in self.chs
+                ],
+                "big_five": (ch.personality.big_five.dict() 
+                             if hasattr(ch, "personality") and ch.personality
+                             else {"openness":0.5,"conscientiousness":0.5,
+                                   "extraversion":0.5,"agreeableness":0.5,"neuroticism":0.5}),
+            })
+        
+        state = {
+            "live": True,
+            "round": self.round_count,
+            "chs": chs_data,
+            "timestamp": __import__("time").time(),
+            "sleep_history": self.sleep_history[-20:],
+        }
+        with open(filepath, "w") as f:
+            json.dump(state, f, ensure_ascii=False)
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
