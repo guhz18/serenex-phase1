@@ -307,6 +307,61 @@ class ChatSandbox:
         
         self.log.append(f"  ↕ 关系 {ch_a.name}-{ch_b.name}: A{delta_a:+.3f} B{delta_b:+.3f}")
     
+    # ── 玩家介入 ──────────────────────────────────────
+    def player_send(self, player_name: str, message: str) -> List[Dict]:
+        """
+        用户介入聊天，以玩家身份发送消息，所有CH回应
+        返回: [{"speaker": "...", "text": "...", "emotion": "..."}, ...]
+        """
+        responses = []
+        _llm = get_llm()
+
+        # 广播给每个CH，让它们回应玩家
+        for ch in list(self.chs.values()):
+            if not ch.personality:
+                ch.personality = create_personality()
+
+            # 构建对话上下文（最近3段记忆）
+            mem_sys = self.memory_systems.get(ch.id)
+            context_memories = []
+            if mem_sys:
+                for m in (mem_sys.recall_recent(3) if hasattr(mem_sys, 'recall_recent') else []):
+                    context_memories.append(m.summary)
+
+            context = " | ".join(context_memories[-3:]) if context_memories else ""
+            emotion_hint = ch.emotion.dominant_tag().value
+
+            # 生成CH对玩家的回应
+            reply = _llm.generate_response(
+                ch_id=ch.id,
+                ch_name=ch.name,
+                ch_persona=ch.personality.mbti_type + "类型人格",
+                partner_name=player_name,
+                context=context + f" | 玩家({player_name})刚说了：{message}",
+                emotion_hint=emotion_hint,
+            )
+
+            # 更新CH状态
+            emotions = infer_emotions(reply)
+            ch.encode_memory(f"[玩家介入] {player_name}: {message}", emotions)
+            ch.perceive_event("player_message", intensity=0.7)
+
+            responses.append({
+                "speaker": ch.name,
+                "text": reply,
+                "emotion": ch.emotion.dominant_tag().value,
+                "ch_mbti": ch.personality.mbti_type if ch.personality else "UNK",
+            })
+
+            # 记录到活跃会话（如果有的话）
+            if self.active_sessions:
+                for (ida, idb), session in list(self.active_sessions.items()):
+                    if (ida, idb) == (session.ch_a, session.ch_b):
+                        session.turns.append((ch.name, reply))
+
+        self.log.append(f"  [玩家介入] {player_name}: {message[:30]}...")
+        return responses
+
     # ── 聊天记录导入 ────────────────────────────────────
     def import_chatlogs(self, filepath: str, ch_assignment: Dict[str, str],
                        importer=None) -> Dict[str, int]:
