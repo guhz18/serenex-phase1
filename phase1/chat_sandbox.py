@@ -10,7 +10,7 @@ from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass, field
 
 from cyber_human import CyberHuman, ChatBehavior, EmotionLabel
-from llm_interface import llm
+from llm_interface import get_llm
 from emotion_tag import infer_emotions
 from personality import PersonalityModel, create_personality
 from sleep_consolidation import SleepConsolidation
@@ -240,7 +240,8 @@ class ChatSandbox:
         emotion_b = ch_b.emotion.dominant_tag().value
         
         # A说
-        reply_a = llm.generate_response(
+        _llm = get_llm()
+        reply_a = _llm.generate_response(
             ch_id=ch_a.id, ch_name=ch_a.name,
             ch_persona="一个有点感性、喜欢聊人生的大学生",
             partner_name=ch_b.name, context=context,
@@ -252,7 +253,7 @@ class ChatSandbox:
         time.sleep(0.01)
         
         # B回复
-        reply_b = llm.generate_response(
+        reply_b = _llm.generate_response(
             ch_id=ch_b.id, ch_name=ch_b.name,
             ch_persona="一个理性稳重、喜欢深度讨论的工程师",
             partner_name=ch_a.name, context=context + f"{ch_a.name}: {reply_a} ",
@@ -306,6 +307,64 @@ class ChatSandbox:
         
         self.log.append(f"  ↕ 关系 {ch_a.name}-{ch_b.name}: A{delta_a:+.3f} B{delta_b:+.3f}")
     
+    # ── 聊天记录导入 ────────────────────────────────────
+    def import_chatlogs(self, filepath: str, ch_assignment: Dict[str, str],
+                       importer=None) -> Dict[str, int]:
+        """
+        导入聊天记录文件，分配给对应 CH
+        
+        filepath: 聊天记录文件路径（支持 .txt/.json/.csv）
+        ch_assignment: {"发言者名字": "CH名字", ...}
+        importer: 可选，自定义 ChatLogImporter 实例
+        
+        返回: {ch_name: 导入消息数}
+        """
+        from chatlog_importer import create_importer
+        imp = importer or create_importer()
+
+        messages = imp.parse_file(filepath)
+        ch_names = list(self.chs.keys())
+
+        # 分配消息给各个 CH
+        name_to_ch = {self.chs[nid].name: nid for nid in self.chs}
+        assigned = imp.assign_to_ch(messages, ch_names, my_name=self._my_name(filepath))
+
+        imported_counts = {}
+        for ch_name_str, msgs in assigned.items():
+            if not msgs:
+                continue
+            # 找对应 CH
+            nid = name_to_ch.get(ch_name_str)
+            if not nid:
+                nid = list(self.chs.keys())[0]  # fallback
+            ch = self.chs[nid]
+            mem_sys = self.memory_systems.get(nid)
+
+            for msg in msgs:
+                emotions = infer_emotions(msg.text)
+                if mem_sys:
+                    mem_sys.store_dialogue(
+                        text=msg.text,
+                        participants=[nid],
+                        emotion_tags=emotions,
+                        summary=msg.text[:80],
+                    )
+                ch.episodic_memory_count += 1
+                # 用消息内容激活大脑相关区域
+                keywords = {w: 0.6 for w in msg.text.split() if len(w) > 3}
+                ch.brain.stimulate(keywords, strength=0.5)
+
+            imported_counts[ch_name_str] = len(msgs)
+            self.log.append(
+                f"  📥 导入 {len(msgs)} 条消息到 {ch_name_str}（文件：{filepath}）"
+            )
+
+        return imported_counts
+
+    def _my_name(self, filepath: str) -> str:
+        """从文件名推断说话人'我'的名字"""
+        return "我"
+
     def status(self) -> str:
         active = sum(1 for ch in self.chs.values() if ch.state == ChatBehavior.IN_CHAT)
         lines = [

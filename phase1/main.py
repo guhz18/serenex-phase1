@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 SereneX Phase 1 — 主运行脚本
-Chat Sandbox + 仪表盘 + 人格模型 + 睡眠整合
+Chat Sandbox + 人格模型 + 睡眠整合 + 真实LLM + 私人记忆导入
 """
 
 import sys, os, time, random, threading, json
@@ -12,10 +12,11 @@ from cyber_human import CyberHuman
 from chat_sandbox import ChatSandbox
 from memory_system import MemorySystem
 from personality import create_personality, PRESET_PERSONAS
-from emotion_tag import infer_emotions
+from llm_interface import get_llm
+from chatlog_importer import create_importer
 
 
-# ── 内置 HTTP 仪表盘（标准库，无第三方依赖）──────────────
+# ── 仪表盘（后台线程）───────────────────────────────
 def run_dashboard(port=5000):
     from dashboard_server import start_server
     start_server(port)
@@ -27,40 +28,33 @@ def start_dashboard():
 
 
 def intro():
-    return """
+    llm = get_llm()
+    provider = llm.provider
+    status = "🔌 " + provider.upper() if provider != "mock" else "📝 mock模式"
+    return f"""
 ╔═══════════════════════════════════════════════════╗
-║      SereneX Phase 1 — Chat Sandbox + Dashboard   ║
-║        Cyber Human Social Simulation Engine         ║
+║      SereneX Phase 1 — Chat Sandbox + LLM + Memory  ║
+║        Cyber Human Social Simulation Engine           ║
 ╚═══════════════════════════════════════════════════╝
-人格系统 · 记忆固化 · 关系演化 · 实时仪表盘
+人格系统 · 记忆固化 · 关系演化 · 真实LLM · 私人记忆导入
+LLM: {status}
 """
 
 
-def main():
-    print(intro())
-
-    # ── 启动仪表盘 ──────────────────────────────────────
-    print("🌐 启动实时仪表盘: http://localhost:5000")
-    start_dashboard()
-
-    # ── 创建沙盒 ────────────────────────────────────────
+def create_sandbox_with_chs() -> ChatSandbox:
     sandbox = ChatSandbox("SereneX-01")
 
-    # ── 创建 CH（带人格模型）────────────────────────────
     personas = {
-        "xiaoming": ("小明", "user_xm", "ENFP"),
-        "xiaoyu":   ("小雨", "user_xy", "INTJ"),
-        "ahua":     ("阿华", "user_ah", "ISFJ"),
+        "xiaoming": ("小明", "user_xm"),
+        "xiaoyu":   ("小雨", "user_xy"),
+        "ahua":     ("阿华", "user_ah"),
     }
 
-    for key, (name, uid, mbti) in personas.items():
+    for key, (name, uid) in personas.items():
         ch = CyberHuman(name=name, user_id=uid)
         personality = create_personality(persona_key=key)
         ch.personality = personality
         sandbox.add_ch(ch, personality)
-        print(f"  🦞 {name} ({mbti}) — {personality.big_five.dict()['extraversion']:.1f}外向 "
-              f"| {personality.empathy_score():.2f}共情 | "
-              f"{personality.big_five.dict()['neuroticism']:.1f}神经质")
 
     # 预填充初始关系
     for ch in sandbox.chs.values():
@@ -70,25 +64,36 @@ def main():
                 ch.relations[other.id] = prob
                 sandbox.relation_matrix[(ch.id, other.id)] = prob
 
-    print("\n" + "="*60)
-    print("预填充关系")
-    for (ida, idb), prob in sorted(sandbox.relation_matrix.items()):
-        if ida < idb:
-            na = sandbox.chs[ida].name
-            nb = sandbox.chs[idb].name
-            bar = "█" * int(prob * 20) + "░" * (20 - int(prob * 20))
-            print(f"  {na} → {nb}: [{bar}] {prob:.2f}")
+    return sandbox
 
-    print("\n  🌐 仪表盘: http://localhost:5000")
-    print("\n▶ 开始运行...\n")
 
-    # ── 运行模拟 ────────────────────────────────────────
-    MAX_ROUNDS = 20
-    ROUND_DELAY = 0.5
+def demo_chatlog_import(sandbox: ChatSandbox):
+    """
+    演示：导入聊天记录文件，初始化 CH 私人记忆
+    支持格式：微信TXT / JSON / CSV
+    """
+    # 尝试导入 examples/ 目录下的示例文件
+    import glob
+    base = os.path.dirname(os.path.abspath(__file__))
+    for pattern in [
+        f"{base}/examples/*.txt",
+        f"{base}/examples/*.json",
+        f"{base}/examples/*.csv",
+    ]:
+        for filepath in glob.glob(pattern):
+            fname = os.path.basename(filepath)
+            print(f"\n📥 检测到聊天记录: {fname}")
+            counts = sandbox.import_chatlogs(filepath, {})
+            for ch_name, n in counts.items():
+                print(f"  → {ch_name}: {n} 条消息")
+            break
 
-    for i in range(1, MAX_ROUNDS + 1):
+
+def run_simulation(sandbox: ChatSandbox, rounds: int = 20, delay: float = 0.5):
+    print(f"\n▶ 开始运行 ({rounds} 轮)...\n")
+    for i in range(1, rounds + 1):
         print(f"{'─'*55}")
-        print(f"【Round {i}/{MAX_ROUNDS}】")
+        print(f"【Round {i}/{rounds}】")
         events = sandbox.tick()
 
         if events:
@@ -98,72 +103,127 @@ def main():
             states = [(ch.name, ch.state.value) for ch in sandbox.chs.values()]
             print(f"  (本轮平静，状态: {', '.join(f'{n}={s}' for n,s in states)})")
 
-        # 打印关系演化
         changed = []
         for (ida, idb), prob in sorted(sandbox.relation_matrix.items()):
             if ida < idb:
                 changed.append(f"{sandbox.chs[ida].name}-{sandbox.chs[idb].name}:{prob:.2f}")
         print(f"  关系: {', '.join(changed)}")
+        time.sleep(delay)
 
-        time.sleep(ROUND_DELAY)
+    return sandbox
 
-    # ── 最终报告 ────────────────────────────────────────
+
+def final_report(sandbox: ChatSandbox):
     print("\n" + "="*60)
     print("最终沙盒状态")
     print(sandbox.status())
 
-    # 人格报告
     print("\n" + "="*60)
     print("人格系统报告")
-    print("="*60)
     for ch in sandbox.chs.values():
         p = getattr(ch, "personality", None)
         if p:
-            print(f"\n🦞 {ch.name} ({p.mbti_type})")
-            print(f"   {p.big_five.dict()}")
+            bf = p.big_five.dict()
+            print(f"\n🦞 {ch.name} ({p.mbti_type}) — {p.big_five.dict()}")
+            print(f"   聊天发起概率: {p.chat_probability():.2f}  |  "
+                  f"共情: {p.empathy_score():.2f}  |  "
+                  f"好奇心: {p.curiosity_level():.2f}")
+            style = p.conversation_style()
+            print(f"   风格: {'主动发起话题' if style['initiates_topics'] else '被动'} | "
+                  f"{style['short_or_long']}回复 | {style['emotional_or_rational']}性")
 
-    # 记忆报告
     print("\n" + "="*60)
     print("记忆库")
-    print("="*60)
-    for ch_id, mem_instance in sandbox.memory_systems.items():
+    for ch_id, mem in sandbox.memory_systems.items():
         ch = sandbox.chs.get(ch_id)
         if not ch: continue
-        mem_sys = mem_instance
-        print(f"\n🦞 {ch.name} 的记忆 ({len(mem_sys.episodic)} 段)：")
-        for mem in mem_sys.recall_recent(5):
-            age = mem_sys._format_age(mem.age())
-            e = max(mem.emotion_tags, key=lambda x: x[1])[0] if mem.emotion_tags else "neutral"
-            print(f"  [{age}] {mem.summary[:50]} | 情绪:{e}")
+        print(f"\n🦞 {ch.name} ({len(mem.episodic)} 段记忆)：")
+        for m in mem.recall_recent(5):
+            age = mem._format_age(m.age())
+            e = max(m.emotion_tags, key=lambda x: x[1])[0] if m.emotion_tags else "neutral"
+            print(f"  [{age}] {m.summary[:50]} | 情绪:{e}")
 
-    # 睡眠报告
     print("\n" + "="*60)
     print("睡眠整合记录")
-    print("="*60)
     if sandbox.sleep_history:
-        for s in sandbox.sleep_history:
+        for s in sandbox.sleep_history[-5:]:
             print(f"\n🌙 Round {s['round']} | {s['ch_name']}")
-            print(f"   梦境: {s['dream_summary'][:60]}")
-            print(f"   重播 {s['memories_replayed']} 段 | "
-                  f"神经 +{s['neural_change']:.3f} | 情绪→{s['emotional_after']}")
+            print(f"   {s['dream_summary'][:60]}")
+            print(f"   重播{s['memories_replayed']}段 | 神经+{s['neural_change']:.3f} | "
+                  f"情绪→{s['emotional_after']}")
     else:
         print("  (未触发睡眠整合)")
 
     print("\n" + "="*60)
     print("神经大脑状态")
-    print("="*60)
     for ch in sandbox.chs.values():
         s = ch.brain.summary()
-        print(f"\n🦞 {ch.name}:")
-        print(f"  神经元:{s['neurons']} 突触:{s['synapses']} "
-              f"平均强度:{s['avg_weight']:.4f} 激活度:{s['total_activation']:.4f}")
+        print(f"\n🦞 {ch.name}: 神经元:{s['neurons']} 突触:{s['synapses']} "
+              f"均强:{s['avg_weight']:.4f} 激活:{s['total_activation']:.4f}")
 
-    print("\n演化日志")
+    print("\n演化日志 (最近15条)")
     for line in sandbox.log[-15:]:
         print(f"  {line}")
 
-    print(f"\n✅ Phase 1 运行完成！")
+
+def main():
+    print(intro())
+
+    # ── LLM 配置提示 ──────────────────────────────────────
+    llm = get_llm()
+    if llm.provider == "mock":
+        print("⚠️  当前为 mock 模式，对话为模板回复")
+        print("   切换到真实 LLM：")
+        print("   export LLM_PROVIDER=deepseek  # 或 openai / qwen")
+        print("   export DEEPSEEK_API_KEY=sk-xxx")
+        print("   然后重新运行 python3 main.py\n")
+    else:
+        print(f"✅ 使用真实 LLM: {llm.provider.upper()}\n")
+
+    # ── 启动仪表盘 ──────────────────────────────────────
+    print("🌐 启动实时仪表盘: http://localhost:5000")
+    start_dashboard()
+    time.sleep(0.5)
+
+    # ── 创建沙盒 ────────────────────────────────────────
+    sandbox = create_sandbox_with_chs()
+
+    # 打印 CH 人格
+    print("\n人格配置：")
+    for ch in sandbox.chs.values():
+        p = getattr(ch, "personality", None)
+        if p:
+            print(f"  🦞 {ch.name} ({p.mbti_type}) 外向={p.big_five.extraversion:.1f} "
+                  f"共情={p.empathy_score():.2f} 神经质={p.big_five.neuroticism:.1f}")
+
+    # 打印预填充关系
+    print("\n预填充关系：")
+    for (ida, idb), prob in sorted(sandbox.relation_matrix.items()):
+        if ida < idb:
+            na = sandbox.chs[ida].name
+            nb = sandbox.chs[idb].name
+            bar = "█" * int(prob * 20) + "░" * (20 - int(prob * 20))
+            print(f"  {na} → {nb}: [{bar}] {prob:.2f}")
+
+    # ── 尝试导入聊天记录（如果有）───────────────────────
+    demo_chatlog_import(sandbox)
+
+    # ── 运行模拟 ────────────────────────────────────────
+    sandbox = run_simulation(sandbox, rounds=20, delay=0.5)
+
+    # ── 最终报告 ───────────────────────────────────────
+    final_report(sandbox)
+
+    print(f"\n{'='*60}")
+    print(f"✅ Phase 1 运行完成！")
     print(f"   🌐 仪表盘仍在运行: http://localhost:5000")
+    print(f"   📁 记忆数据: ./memory_store/")
+    print(f"   🤖 LLM: {llm.provider.upper()}")
+    print(f"\n   私人聊天记录导入：")
+    print(f"   python3 -c \"")
+    print(f"     from chat_sandbox import ChatSandbox; from chatlog_importer import create_importer;")
+    print(f"     sb = ChatSandbox('MySereneX'); sb.import_chatlogs('your_chat.txt', {{}})\"")
+    print(f"   \"")
 
 
 if __name__ == "__main__":
