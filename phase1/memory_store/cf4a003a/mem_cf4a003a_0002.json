@@ -1,0 +1,18 @@
+{
+  "id": "mem_cf4a003a_0002",
+  "timestamp": 1773989826.2863324,
+  "content": "你好啊，小明！我是小雨。",
+  "summary": "你好啊，小明！我是小雨。",
+  "participants": [
+    "cf4a003a",
+    "f6d3dcab"
+  ],
+  "emotion_tags": [
+    {
+      "label": "neutral",
+      "intensity": 0.5
+    }
+  ],
+  "importance": 0.46199999999999997,
+  "linked_image_ids": []
+}

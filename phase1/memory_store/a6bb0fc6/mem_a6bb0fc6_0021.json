@@ -1,0 +1,18 @@
+{
+  "id": "mem_a6bb0fc6_0021",
+  "timestamp": 1773988924.0493712,
+  "content": "嘿，最近怎么样？",
+  "summary": "嘿，最近怎么样？",
+  "participants": [
+    "ae47f7b0",
+    "a6bb0fc6"
+  ],
+  "emotion_tags": [
+    {
+      "label": "neutral",
+      "intensity": 0.5
+    }
+  ],
+  "importance": 0.45799999999999996,
+  "linked_image_ids": []
+}

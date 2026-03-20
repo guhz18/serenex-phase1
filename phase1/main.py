@@ -6,6 +6,17 @@ Chat Sandbox + 人格模型 + 睡眠整合 + 真实LLM + 私人记忆导入
 
 import sys, os, time, random, threading, json
 
+# ── 加载 .env 配置 ──────────────────────────────────────────
+_env_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+if os.path.exists(_env_file):
+    for line in open(_env_file):
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" in line:
+            k, v = line.split("=", 1)
+            os.environ.setdefault(k.strip(), v.strip())
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from cyber_human import CyberHuman

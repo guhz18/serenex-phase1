@@ -1,0 +1,18 @@
+{
+  "id": "mem_89f50704_0001",
+  "timestamp": 1773992186.2032073,
+  "content": "今天天气真不错，适合出去走走。",
+  "summary": "今天天气真不错，适合出去走走。",
+  "participants": [
+    "89f50704",
+    "7f3583a4"
+  ],
+  "emotion_tags": [
+    {
+      "label": "neutral",
+      "intensity": 0.5
+    }
+  ],
+  "importance": 0.46499999999999997,
+  "linked_image_ids": []
+}

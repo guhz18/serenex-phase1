@@ -1,0 +1,18 @@
+{
+  "id": "mem_bec47d2e_0002",
+  "timestamp": 1773992150.033563,
+  "content": "是啊，有时候觉得在阳光下走走，心情都会变好呢。",
+  "summary": "是啊，有时候觉得在阳光下走走，心情都会变好呢。",
+  "participants": [
+    "bec47d2e",
+    "12cf6ea6"
+  ],
+  "emotion_tags": [
+    {
+      "label": "neutral",
+      "intensity": 0.5
+    }
+  ],
+  "importance": 0.473,
+  "linked_image_ids": []
+}

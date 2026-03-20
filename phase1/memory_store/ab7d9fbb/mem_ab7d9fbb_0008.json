@@ -1,0 +1,17 @@
+{
+  "id": "mem_ab7d9fbb_0008",
+  "timestamp": 1774044257.896288,
+  "content": "我是觉得很抽象",
+  "summary": "我是觉得很抽象",
+  "participants": [
+    "ab7d9fbb"
+  ],
+  "emotion_tags": [
+    {
+      "label": "neutral",
+      "intensity": 0.5
+    }
+  ],
+  "importance": 0.45699999999999996,
+  "linked_image_ids": []
+}

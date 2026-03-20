@@ -1,0 +1,18 @@
+{
+  "id": "mem_ae47f7b0_0005",
+  "timestamp": 1773988917.396125,
+  "content": "你好啊，小明！",
+  "summary": "你好啊，小明！",
+  "participants": [
+    "ae47f7b0",
+    "a6bb0fc6"
+  ],
+  "emotion_tags": [
+    {
+      "label": "neutral",
+      "intensity": 0.5
+    }
+  ],
+  "importance": 0.45699999999999996,
+  "linked_image_ids": []
+}

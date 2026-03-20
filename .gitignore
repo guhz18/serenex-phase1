@@ -1,0 +1,6 @@
+**/__pycache__/
+*.pyc
+*.pyo
+phase1/memory_store/
+.DS_Store
+*.log

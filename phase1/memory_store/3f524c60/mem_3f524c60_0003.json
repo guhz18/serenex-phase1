@@ -1,0 +1,18 @@
+{
+  "id": "mem_3f524c60_0003",
+  "timestamp": 1773992178.9206872,
+  "content": "小雨: 对了，你上次提到的那个项目进展如何？",
+  "summary": "小雨: 对了，你上次提到的那个项目进展如何？",
+  "participants": [
+    "7f3583a4",
+    "3f524c60"
+  ],
+  "emotion_tags": [
+    {
+      "label": "neutral",
+      "intensity": 0.5
+    }
+  ],
+  "importance": 0.472,
+  "linked_image_ids": []
+}

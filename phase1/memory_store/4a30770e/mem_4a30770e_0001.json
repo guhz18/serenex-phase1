@@ -1,0 +1,17 @@
+{
+  "id": "mem_4a30770e_0001",
+  "timestamp": 1774044337.7680583,
+  "content": "撤回了一条消息",
+  "summary": "撤回了一条消息",
+  "participants": [
+    "4a30770e"
+  ],
+  "emotion_tags": [
+    {
+      "label": "neutral",
+      "intensity": 0.5
+    }
+  ],
+  "importance": 0.45699999999999996,
+  "linked_image_ids": []
+}

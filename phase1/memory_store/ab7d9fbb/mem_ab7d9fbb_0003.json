@@ -1,0 +1,17 @@
+{
+  "id": "mem_ab7d9fbb_0003",
+  "timestamp": 1774044257.8955705,
+  "content": "这不是一个横线吗",
+  "summary": "这不是一个横线吗",
+  "participants": [
+    "ab7d9fbb"
+  ],
+  "emotion_tags": [
+    {
+      "label": "neutral",
+      "intensity": 0.5
+    }
+  ],
+  "importance": 0.45799999999999996,
+  "linked_image_ids": []
+}

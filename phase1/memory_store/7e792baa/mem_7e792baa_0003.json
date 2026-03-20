@@ -1,0 +1,18 @@
+{
+  "id": "mem_7e792baa_0003",
+  "timestamp": 1773988882.2884176,
+  "content": "嗨~终于有人来聊天了",
+  "summary": "嗨~终于有人来聊天了",
+  "participants": [
+    "aa75f64b",
+    "7e792baa"
+  ],
+  "emotion_tags": [
+    {
+      "label": "neutral",
+      "intensity": 0.5
+    }
+  ],
+  "importance": 0.45999999999999996,
+  "linked_image_ids": []
+}

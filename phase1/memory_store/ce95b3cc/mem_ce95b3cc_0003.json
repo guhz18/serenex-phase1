@@ -1,0 +1,17 @@
+{
+  "id": "mem_ce95b3cc_0003",
+  "timestamp": 1774045676.9881272,
+  "content": "大多数量子力学书籍都只会给出x表象下的求解方法，但是这里我们给出p表象的求解过程，这一过程非常诡异，完全没有解偏微分方程，而是通过'自相似'的方法解方程。",
+  "summary": "奇异势阱束缚态",
+  "participants": [
+    "ce95b3cc"
+  ],
+  "emotion_tags": [
+    {
+      "label": "neutral",
+      "intensity": 0.5
+    }
+  ],
+  "importance": 0.527,
+  "linked_image_ids": []
+}

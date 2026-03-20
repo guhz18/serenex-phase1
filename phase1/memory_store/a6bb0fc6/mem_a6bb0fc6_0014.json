@@ -1,0 +1,18 @@
+{
+  "id": "mem_a6bb0fc6_0014",
+  "timestamp": 1773988920.4646223,
+  "content": "你好啊，小雨！",
+  "summary": "你好啊，小雨！",
+  "participants": [
+    "a6bb0fc6",
+    "ae47f7b0"
+  ],
+  "emotion_tags": [
+    {
+      "label": "neutral",
+      "intensity": 0.5
+    }
+  ],
+  "importance": 0.45699999999999996,
+  "linked_image_ids": []
+}
