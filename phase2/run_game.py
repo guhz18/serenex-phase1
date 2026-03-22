@@ -31,7 +31,10 @@ if __name__ == "__main__":
         for ch in sb.chat.chs.values():
             ns = sb.needs.get(ch.id)
             loc = sb.world.get_ch_location(ch.id)
-            print(f"  {ch.name} @ {loc.value} energy={ns.needs[0].value:.2f} mood={ns.needs[1].value:.2f}")
+            from needs_system import NeedLabel
+            energy = ns.needs[NeedLabel.ENERGY].value if ns else 0
+            mood   = ns.needs[NeedLabel.MOOD].value   if ns else 0
+            print(f"  {ch.name} @ {loc.value} energy={energy:.2f} mood={mood:.2f}")
         for e in events: print(f"  {e}")
         time.sleep(0.5)
     print("\n✅ 完成！启动CLI: python game_cli.py")

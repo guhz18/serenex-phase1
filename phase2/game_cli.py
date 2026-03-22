@@ -16,6 +16,7 @@ SereneX Phase 2 — 交互式 CLI
 """
 
 import sys, os, time
+from needs_system import NeedLabel
 
 # 加载 .env
 for line in open(".env", encoding="utf-8-sig"):
@@ -97,9 +98,9 @@ def mini_dashboard(sb: GameSandbox):
             bar = "█" * int(val * 5) + "░" * (5 - int(val * 5))
             return f"{c(label, 'dim')}{c(bar, color)}"
 
-        energy = ns.needs[0].value if ns else 0
-        mood   = ns.needs[1].value if ns else 0
-        social = ns.needs[2].value if ns else 0
+        energy = ns.needs[NeedLabel.ENERGY].value if ns else 0
+        mood   = ns.needs[NeedLabel.MOOD].value   if ns else 0
+        social = ns.needs[NeedLabel.SOCIAL].value  if ns else 0
         emo = ch.emotion.dominant_tag().value
 
         print(f"  │ {C['bold']}{ch.name:<8}{C['reset']} {loc_name:<4} "

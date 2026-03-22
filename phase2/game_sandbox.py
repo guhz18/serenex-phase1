@@ -48,6 +48,7 @@ class GameSandbox:
 
         # 任务系统
         self.quests = QuestSystem()
+        self.quests.new_day()  # 初始化每日任务
 
         # 活动记录
         self.activity_log: List[ActivityRecord] = []
@@ -293,11 +294,13 @@ class GameSandbox:
         emotion_b = ch_b.emotion.dominant_tag().value
 
         # A说
+        mood_a_val = self.needs[ch_a.id].mood_score()
+        mood_b_val = self.needs[ch_b.id].mood_score()
         prompt_a = (
             f"场景：{context}\n"
             f"你是{ch_a.name}（MBTI: {getattr(ch_a,'personality',None) and ch_a.personality.mbti_type or 'ENFP'}）。"
             f"你现在在{PLACES[self.world.get_ch_location(ch_a.id)].name}，"
-            f"遇到{ch_b.name}，心情指数{kmood_a:=self.needs[ch_a.id].mood_score():.1f}。\n"
+            f"遇到{ch_b.name}，心情指数{mood_a_val:.1f}。\n"
             f"心情{emotion_a}。请用一句话自然地打招呼或开启对话（<30字，口语化）。"
         )
         reply_a = self.llm.generate_response(
@@ -314,7 +317,7 @@ class GameSandbox:
             f"你是{ch_b.name}（MBTI: {getattr(ch_b,'personality',None) and ch_b.personality.mbti_type or 'INTJ'}）。"
             f"你现在在{PLACES[self.world.get_ch_location(ch_b.id)].name}，"
             f"{ch_a.name}对你说：「{reply_a}」\n"
-            f"你的心情指数{kmood_b:=self.needs[ch_b.id].mood_score():.1f}，心情{emotion_b}。"
+            f"你的心情指数{mood_b_val:.1f}，心情{emotion_b}。"
             f"请用一句话自然回复（<30字，口语化）。"
         )
         reply_b = self.llm.generate_response(
@@ -388,7 +391,7 @@ class GameSandbox:
                             self.chat.relation_matrix[(ch_id, other_id)] = min(1.0, cur + 0.15)
 
         # 新的一天重置
-        if self.world.time_hour == 8 and self.round > 1:
+        if self.world.time_hour == 8 and self.round >= 1:
             self.quests.new_day()
             events.append(f"\n  📅 新的一天（Day {self.world.day}）— 每日任务已刷新")
             for q in self.quests.quests:

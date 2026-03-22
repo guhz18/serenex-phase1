@@ -23,18 +23,18 @@ class Place:
     name: str
     id: Location
     description: str
-    capacity: int = 5       # 同时容纳人数
     activity_tags: List[str]  # 适合的活动类型
     mood_modifier: float = 0.0  # 在此地心情修正
+    capacity: int = 5       # 同时容纳人数
 
 
 PLACES: Dict[Location, Place] = {
-    Location.HOME:     Place("家",     Location.HOME,     "舒适的小窝，休息恢复能量",   capacity=2, activity_tags=["rest", "chat_home"]),
-    Location.PARK:      Place("公园",   Location.PARK,     "阳光下的草地，适合散步聊天", capacity=8, activity_tags=["walk", "chat_outdoor", "exercise"]),
-    Location.CAFE:      Place("咖啡馆", Location.CAFE,     "氛围温馨，适合深度对话",     capacity=6, activity_tags=["chat_indoor", "work"]),
-    Location.OFFICE:   Place("办公室", Location.OFFICE,   "工作场所，忙碌但充实",       capacity=10, activity_tags=["work", "meet"]),
-    Location.MALL:     Place("商场",   Location.MALL,     "热闹繁华，吃喝玩乐齐全",     capacity=20, activity_tags=["shop", "eat", "chat_indoor"]),
-    Location.LIBRARY:  Place("图书馆", Location.LIBRARY,  "安静的知识殿堂，适合独处",   capacity=15, activity_tags=["read", "work", "rest"]),
+    Location.HOME:     Place("家",     Location.HOME,     "舒适的小窝，休息恢复能量",   ["rest", "chat_home"],   0.1, 2),
+    Location.PARK:     Place("公园",   Location.PARK,     "阳光下的草地，适合散步聊天", ["walk", "chat_outdoor", "exercise"], 0.15, 8),
+    Location.CAFE:     Place("咖啡馆", Location.CAFE,     "氛围温馨，适合深度对话",    ["chat_indoor", "work"], 0.1, 6),
+    Location.OFFICE:   Place("办公室", Location.OFFICE,   "工作场所，忙碌但充实",       ["work", "meet"], -0.05, 10),
+    Location.MALL:     Place("商场",   Location.MALL,     "热闹繁华，吃喝玩乐齐全",    ["shop", "eat", "chat_indoor"], 0.0, 20),
+    Location.LIBRARY:  Place("图书馆", Location.LIBRARY,  "安静的知识殿堂，适合独处",  ["read", "work", "rest"], 0.05, 15),
 }
 
 
