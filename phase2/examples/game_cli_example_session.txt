@@ -1,0 +1,115 @@
+# SereneX Phase 2 — CLI 交互示例
+# 游戏版本：Phase 2 (AI社群模拟 + DeepSeek LLM)
+# 运行环境：Python 3.10+, DeepSeek API Key
+#
+# 如何运行：
+#   cd phase2
+#   cp .env.example .env   # 填入你的 API Key
+#   python3 game_cli.py
+#
+# ==============================================================
+
+serenex> help
+
+SereneX Phase 2 — 命令帮助
+
+  tick [N]      运行 N 轮游戏（默认1轮，最多20轮）
+                每轮 = 游戏内1小时，日夜交替自动推进
+
+  status / st   显示完整沙盒状态（角色、关系、任务）
+
+  go <人> <地>  移动角色到指定地点
+                地点: home | park | cafe | office | mall | library
+                示例: go 小明 cafe
+
+  msg <人> <内容>  向角色发送私信
+                示例: msg 小明 今天心情怎么样？
+
+  broadcast <内容>  广播消息给所有人
+                示例: broadcast 今晚咖啡馆聚会！
+
+  event <描述>  触发一个特殊事件（影响所有角色心情）
+                示例: event 突然下起了大雨！
+
+  do <人> <活动>  让角色执行活动
+                活动: rest | work | chat | eat | exercise | explore | alone
+
+  quest / q   显示当前任务进度
+
+  log / l      显示最近事件日志
+
+  clear        清屏
+
+  quit / exit  退出
+
+
+serenex> status
+
+━━━ SereneX ━━━
+Round 0/50 | [Day1 上午] | Day 1
+事件：公园有露天音乐会！很多人去了 今天天气很好，适合出门！
+
+【角色状态】
+  小明 (ENFP) @ 家 | energy:😊满足 | mood:😐一般 | social:😐一般 | neutral
+  小雨 (INTJ) @ 家 | energy:😊满足 | mood:😐一般 | social:😐一般 | neutral
+  阿华 (ISFJ) @ 家 | energy:😊满足 | mood:😐一般 | social:😐一般 | neutral
+  Hertz (ISTJ) @ 家 | energy:😊满足 | mood:😐一般 | social:😐一般 | neutral
+
+【关系矩阵】
+  小雨 ↔ 阿华: 0.42
+  小雨 ↔ 小明: 0.40
+  小雨 ↔ Hertz: 0.42
+  阿华 ↔ 小明: 0.24
+  阿华 ↔ Hertz: 0.44
+  小明 ↔ Hertz: 0.33
+
+【任务】
+  ⬜ 探索者 [0/1] — 让任意CH去一个新地点 (能量+0.1)
+  ⬜ 深度对话 [0/1] — 指定两位CH聊天3轮以上 (关系+0.15)
+
+
+serenex> tick 1
+
+⏳ 运行 1 轮...
+
+  ╭─ [Day1 深夜] Day1 ──────────────────────
+  │ 小明      办公室  ⚡███░░  😊███░░  💬██░░░  neutral
+  │ 小雨      家     ⚡███░░  😊███░░  💬███░░  neutral
+  │ 阿华      家     ⚡███░░  😊███░░  💬███░░  neutral
+  │ Hertz   咖啡馆  ⚡███░░  😊███░░  💬██░░░  neutral
+  ╰────────────────────────────────────────
+  🔔 今日事件：公园有露天音乐会！很多人去了 今天天气很好，适合出门！
+
+  💼 小明 去办公室工作
+  🧭 Hertz 探索了咖啡馆
+  💬 阿华 ↔ 小雨（家）
+   A: 你也去音乐会了吗？...
+   B: 没去，在家看书比较安静。...
+    🎉 任务完成：探索者 → 能量+0.1
+  ↗ 共运行 1 轮
+
+
+serenex> log
+
+━━━ 最近日志 ━━━
+    + 加入了沙盒: 小明 (7ffb12b2)
+    + 加入了沙盒: 小雨 (080a76d3)
+    + 加入了沙盒: 阿华 (6dfc96be)
+    + 加入了沙盒: Hertz (f4bd8038)
+    + Day 1 上午 → 深夜: 4个角色活跃
+    + 💼 小明: 去办公室工作
+    + 🧭 Hertz: 探索了咖啡馆
+    + 💬 阿华 ↔ 小雨（家）
+
+
+serenex> quest
+
+━━━ 任务 ━━━
+  ✅ 探索者  — 让任意CH去一个新地点 (能量+0.1)
+  ⬜ 深度对话 [0/1] — 指定两位CH聊天3轮以上 (关系+0.15)
+
+  历史完成：已完成：探索者
+
+serenex> quit
+
+bye~

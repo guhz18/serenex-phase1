@@ -1,0 +1,12 @@
+# Environment — 勿提交真实 API Key！
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# 内存存储（运行时生成）
+memory_store/
