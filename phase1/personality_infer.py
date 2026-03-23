@@ -104,7 +104,7 @@ class PersonalityInferrer:
         emotional_tone = self._analyze_emotional_tone()
         engagement = self._analyze_engagement_pattern()
         mbti, bf = self._infer_mbti_and_big_five(style, emotional_tone, engagement)
-        persona_desc = self._build_persona_description(style, top_topics, emotional_tone)
+        persona_desc = self._build_persona_description(style, top_topics, emotional_tone, engagement)
 
         profile = ContentProfile(
             writing_style=style,
@@ -308,7 +308,8 @@ class PersonalityInferrer:
 
     def _build_persona_description(self, style: WritingStyle,
                                     topics: List[tuple],
-                                    tone: str) -> str:
+                                    tone: str,
+                                    engagement_pattern: str = "") -> str:
         """生成 LLM 可用的人物描述"""
         topic_str = "、".join(w for w, _ in topics[:5]) if topics else "多种话题"
 
@@ -324,7 +325,7 @@ class PersonalityInferrer:
             "互动讨论型": "热衷参与讨论，关注评论区反馈",
             "原创表达型": "以原创内容为主，注重自我表达",
         }
-        engage_desc = engagement_map.get(style.engagement_pattern, "")
+        engage_desc = engagement_map.get(engagement_pattern, "")
 
         style_descs = []
         if style.emoji_count_per_post > 0.8:
