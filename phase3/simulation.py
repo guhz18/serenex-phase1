@@ -66,7 +66,8 @@ class CivilizationLogger:
 
         if self.relationships_file.exists():
             with open(self.relationships_file, encoding="utf-8") as f:
-                self.relationships = json.load(f)
+                raw = json.load(f)
+            self.relationships = {tuple(k.split("___")): v for k, v in raw.items()}
         else:
             self.relationships = {}
 
@@ -75,8 +76,10 @@ class CivilizationLogger:
             json.dump(self.events, f, ensure_ascii=False, indent=2)
         with open(self.population_file, "w", encoding="utf-8") as f:
             json.dump(self.population_history, f, ensure_ascii=False, indent=2)
+        # tuple key → string key for JSON
+        serializable_rel = {f"{k[0]}___{k[1]}": v for k, v in self.relationships.items()}
         with open(self.relationships_file, "w", encoding="utf-8") as f:
-            json.dump(self.relationships, f, ensure_ascii=False, indent=2)
+            json.dump(serializable_rel, f, ensure_ascii=False, indent=2)
 
     def log_event(self, ch_name: str, description: str, emotion: dict, weight: float,
                   event_type: str = "activity", participants: list[str] = None):
@@ -204,6 +207,7 @@ class SimulationEngine:
         self.civ_logger = CivilizationLogger()
         self.running = False
         self.speed = 1.0  # 模拟速度（一天=几秒）
+        self._reached_milestones: set[int] = {0}  # 已达成的里程碑人口阈值
 
     @staticmethod
     def get_current_day() -> int:
@@ -324,10 +328,12 @@ class SimulationEngine:
             100: ("civilization", "文明璀璨绽放", "civilization"),
         }
 
-        prev_pop = len(self.civ_logger.population_history[-1]["ch_names"]) if self.civ_logger.population_history else 1
-        if pop >= 2 and prev_pop < 2:
-            m = milestones[2]
-            new_milestones.append(self.civ_logger.log_milestone(m[2], m[1], list(self.chs.keys()), {"joy": 0.9}))
+        for threshold, (mtype, desc, phase) in milestones.items():
+            if pop >= threshold and threshold not in self._reached_milestones:
+                self._reached_milestones.add(threshold)
+                new_milestones.append(
+                    self.civ_logger.log_milestone(phase, desc, list(self.chs.keys()), {"joy": 0.9})
+                )
 
         return new_milestones
 
