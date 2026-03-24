@@ -11,8 +11,8 @@ build/
 # 内存存储（运行时生成）
 memory_store/
 
-# 用户生成的私人 CH 卡片（示例卡片和 README 除外）
-cards/*.json
-!cards/README.md
-!cards/UCL_Research_Assistant.json
-cards/
+# 用户生成的私人 CH 卡片
+# cards/ 目录本身不忽略（以便追踪示例卡片）
+cards/*.json          # 忽略用户生成的卡片
+!cards/README.md      # 保留 README
+!cards/UCL_Research_Assistant.json  # 保留示例卡片
