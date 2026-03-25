@@ -3,8 +3,8 @@ SereneX Phase 3 — 文明演化模拟引擎
 管理多个 CH 的运行、交互、文明日志、事件编年
 """
 import json
-import time
 import os
+import time
 from datetime import datetime
 from pathlib import Path
 from dataclasses import dataclass, field
@@ -52,34 +52,46 @@ class CivilizationLogger:
         self._load()
 
     def _load(self):
-        if self.events_file.exists():
-            with open(self.events_file, encoding="utf-8") as f:
-                self.events = json.load(f)
-        else:
+        try:
+            if self.events_file.exists():
+                with open(self.events_file, encoding="utf-8") as f:
+                    self.events = json.load(f)
+            else:
+                self.events = []
+
+            if self.population_file.exists():
+                with open(self.population_file, encoding="utf-8") as f:
+                    self.population_history = json.load(f)
+            else:
+                self.population_history = []
+
+            if self.relationships_file.exists():
+                raw = open(self.relationships_file, encoding="utf-8").read()
+                if raw.strip() == "{" or not raw.strip():
+                    self.relationships = {}
+                else:
+                    parsed = json.loads(raw)
+                    self.relationships = {tuple(k.split("___")): v for k, v in parsed.items()}
+            else:
+                self.relationships = {}
+        except (json.JSONDecodeError, OSError):
+            # 文件损坏时重置
             self.events = []
-
-        if self.population_file.exists():
-            with open(self.population_file, encoding="utf-8") as f:
-                self.population_history = json.load(f)
-        else:
             self.population_history = []
-
-        if self.relationships_file.exists():
-            with open(self.relationships_file, encoding="utf-8") as f:
-                raw = json.load(f)
-            self.relationships = {tuple(k.split("___")): v for k, v in raw.items()}
-        else:
             self.relationships = {}
 
     def _save(self):
-        with open(self.events_file, "w", encoding="utf-8") as f:
-            json.dump(self.events, f, ensure_ascii=False, indent=2)
-        with open(self.population_file, "w", encoding="utf-8") as f:
-            json.dump(self.population_history, f, ensure_ascii=False, indent=2)
-        # tuple key → string key for JSON
+        """原子写入：先写临时文件再 rename，防止文件损坏"""
+        def atomic_write(path, data):
+            tmp = str(path) + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            os.replace(tmp, path)
+
+        atomic_write(self.events_file, self.events)
+        atomic_write(self.population_file, self.population_history)
         serializable_rel = {f"{k[0]}___{k[1]}": v for k, v in self.relationships.items()}
-        with open(self.relationships_file, "w", encoding="utf-8") as f:
-            json.dump(serializable_rel, f, ensure_ascii=False, indent=2)
+        atomic_write(self.relationships_file, serializable_rel)
 
     def log_event(self, ch_name: str, description: str, emotion: dict, weight: float,
                   event_type: str = "activity", participants: list[str] = None):

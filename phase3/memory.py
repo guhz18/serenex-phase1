@@ -226,10 +226,17 @@ class LongTermMemory:
         """获取所有日记（用于上下文）"""
         diaries = []
         for f in sorted(self.base_dir.glob("*.json"), reverse=True)[:limit]:
-            with open(f, encoding="utf-8") as fp:
-                dm = DailyMemory(**json.load(fp))
-                if dm.diary_text:
-                    diaries.append({"date": dm.date, "text": dm.diary_text})
+            # 跳过非日记文件
+            if f.name in ("emotional_log.json", "identity.json"):
+                continue
+            try:
+                with open(f, encoding="utf-8") as fp:
+                    dm = DailyMemory(**json.load(fp))
+                    if dm.diary_text:
+                        diaries.append({"date": dm.date, "text": dm.diary_text})
+            except (TypeError, KeyError, json.JSONDecodeError):
+                # 文件格式异常或为空，跳过
+                continue
         return diaries
 
 

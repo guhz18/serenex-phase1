@@ -245,7 +245,7 @@ class CyberHuman:
         """每日結束：生成並保存日記"""
         diary = self.diary_gen.generate_diary(self.today_entries)
         mood = self.diary_gen._calc_mood_curve(self.today_entries)
-        self.diary_gen.save_diary(diary, **mood)
+        self.diary_gen.save_diary(diary, mood["morning"], mood["afternoon"], mood["evening"])
 
         # 更新身份年齡
         identity = self.memory.get_identity()

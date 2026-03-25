@@ -1,0 +1,165 @@
+[
+  {
+    "id": "milestone_20260324_113133",
+    "day": 0,
+    "timestamp": "2026-03-24T11:31:33.659060",
+    "type": "milestone",
+    "milestone_type": "birth",
+    "participants": [
+      "亚当"
+    ],
+    "description": "亚当 诞生于这个世界",
+    "emotion_avg": {
+      "joy": 0.9,
+      "curiosity": 0.8,
+      "surprise": 0.5
+    },
+    "impact": 1.0
+  },
+  {
+    "id": "milestone_20260324_113133",
+    "day": 0,
+    "timestamp": "2026-03-24T11:31:33.659668",
+    "type": "milestone",
+    "milestone_type": "birth",
+    "participants": [
+      "伊娃"
+    ],
+    "description": "伊娃 诞生于这个世界",
+    "emotion_avg": {
+      "joy": 0.9,
+      "curiosity": 0.8,
+      "surprise": 0.5
+    },
+    "impact": 1.0
+  },
+  {
+    "id": "milestone_20260324_113227",
+    "day": 0,
+    "timestamp": "2026-03-24T11:32:27.499536",
+    "type": "milestone",
+    "milestone_type": "birth",
+    "participants": [
+      "亚当"
+    ],
+    "description": "亚当 诞生于这个世界",
+    "emotion_avg": {
+      "joy": 0.9,
+      "curiosity": 0.8,
+      "surprise": 0.5
+    },
+    "impact": 1.0
+  },
+  {
+    "id": "milestone_20260324_113227",
+    "day": 0,
+    "timestamp": "2026-03-24T11:32:27.500261",
+    "type": "milestone",
+    "milestone_type": "birth",
+    "participants": [
+      "伊娃"
+    ],
+    "description": "伊娃 诞生于这个世界",
+    "emotion_avg": {
+      "joy": 0.9,
+      "curiosity": 0.8,
+      "surprise": 0.5
+    },
+    "impact": 1.0
+  },
+  {
+    "id": "evt_20260324_113227",
+    "day": 1,
+    "type": "meeting",
+    "participants": [
+      "亚当",
+      "伊娃"
+    ],
+    "description": "亚当 和 伊娃 在世界中相遇",
+    "emotion_avg": {
+      "joy": 0.4,
+      "curiosity": 0.5
+    },
+    "impact": 0.6
+  },
+  {
+    "id": "milestone_20260324_113247",
+    "day": 0,
+    "timestamp": "2026-03-24T11:32:47.518082",
+    "type": "milestone",
+    "milestone_type": "birth",
+    "participants": [
+      "亚当"
+    ],
+    "description": "亚当 诞生于这个世界",
+    "emotion_avg": {
+      "joy": 0.9,
+      "curiosity": 0.8,
+      "surprise": 0.5
+    },
+    "impact": 1.0
+  },
+  {
+    "id": "milestone_20260324_113247",
+    "day": 0,
+    "timestamp": "2026-03-24T11:32:47.518933",
+    "type": "milestone",
+    "milestone_type": "birth",
+    "participants": [
+      "伊娃"
+    ],
+    "description": "伊娃 诞生于这个世界",
+    "emotion_avg": {
+      "joy": 0.9,
+      "curiosity": 0.8,
+      "surprise": 0.5
+    },
+    "impact": 1.0
+  },
+  {
+    "id": "evt_20260324_113247",
+    "day": 1,
+    "type": "meeting",
+    "participants": [
+      "亚当",
+      "伊娃"
+    ],
+    "description": "亚当 和 伊娃 在世界中相遇",
+    "emotion_avg": {
+      "joy": 0.4,
+      "curiosity": 0.5
+    },
+    "impact": 0.6
+  },
+  {
+    "id": "milestone_20260324_113247",
+    "day": 1,
+    "timestamp": "2026-03-24T11:32:47.816875",
+    "type": "milestone",
+    "milestone_type": "settlement",
+    "participants": [
+      "亚当",
+      "伊娃"
+    ],
+    "description": "第二个灵魂诞生！",
+    "emotion_avg": {
+      "joy": 0.9
+    },
+    "impact": 1.0
+  },
+  {
+    "id": "evt_20260324_113248",
+    "day": 3,
+    "type": "meeting",
+    "participants": [
+      "亚当",
+      "伊娃"
+    ],
+    "description": "亚当 和 伊娃 在世界中相遇",
+    "emotion_avg": {
+      "joy": 0.4,
+      "curiosity": 0.5
+    },
+    "impact": 0.6
+  }
+]
